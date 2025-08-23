@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow-lg p-4" style="width: 400px;">
+        <h2 class="text-center mb-4">Login to BanglaGuide</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                {{ form.username.label_tag }} {{ form.username }} {{ form.username.errors }}
+            </div>
+            <div class="mb-3">
+                {{ form.password.label_tag }} {{ form.password }} {{ form.password.errors }}
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Login</button>
+        </form>
+        <div class="text-center mt-3">
+            <a href="{% url 'provider_login' %}" class="btn btn-secondary w-100">Service Provider Login</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">Your Cart</h2>
+
+<div class="row">
+    <div class="col-md-8">
+        {% for item in cart %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ item.name }} ({{ item.type | capfirst }})</h5>
+                    {% if item.type == 'hotel' %}
+                        <p>Single Room: <button class="btn btn-sm btn-secondary decrease" data-index="{{ forloop.counter0 }}" data-type="single">-</button> {{ item.single_qty }} <button class="btn btn-sm btn-secondary increase" data-index="{{ forloop.counter0 }}" data-type="single">+</button> ({{ item.single_price }} Tk)</p>
+                        <p>Double Room: <button class="btn btn-sm btn-secondary decrease" data-index="{{ forloop.counter0 }}" data-type="double">-</button> {{ item.double_qty }} <button class="btn btn-sm btn-secondary increase" data-index="{{ forloop.counter0 }}" data-type="double">+</button> ({{ item.double_price }} Tk)</p>
+                    {% else %}
+                        <p>Price: {{ item.price }} Tk</p>
+                    {% endif %}
+                    <p>Subtotal: {{ item.subtotal }} Tk</p>
+                </div>
+            </div>
+        {% endfor %}
+        <h4>Total: {{ total }} Tk</h4>
+        <a href="{% url 'payment' %}" class="btn btn-primary">Proceed to Payment</a>
+    </div>
+    <div class="col-md-4">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_dates">
+            <div class="mb-3">
+                <label>Start Date:</label>
+                <input type="date" name="start_date" value="{{ start_date }}" class="form-control" min="{{ today|date:'Y-m-d' }}" max="{{ future_date|date:'Y-m-d' }}">
+            </div>
+            <div class="mb-3">
+                <label>End Date:</label>
+                <input type="date" name="end_date" value="{{ end_date }}" class="form-control" min="{{ start_date|default:today|date:'Y-m-d' }}" max="{{ future_date|date:'Y-m-d' }}">
+            </div>
+            <button type="submit" class="btn btn-secondary">Update Dates</button>
+        </form>
+        {% if weather %}
+            <div class="mt-4">
+                <h5>Weather on {{ start_date }} in Dhaka</h5>
+                {% if weather.temp %}
+                    <p>Temperature: {{ weather.temp }} °C</p>
+                    <p>Condition: {{ weather.condition }}</p>
+                {% else %}
+                    <p>{{ weather }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.increase, .decrease').forEach(button => {
+    button.addEventListener('click', function() {
+        const index = this.dataset.index;
+        const type = this.dataset.type;
+        const isIncrease = this.classList.contains('increase');
+        fetch('{% url "cart" %}', {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `action=update_qty&index=${index}&${type}_qty=${isIncrease ? 1 : -1}`
+        }).then(response => location.reload());
+    });
+});
+</script>
+
+{% endblock %}
