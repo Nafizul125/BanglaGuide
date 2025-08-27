@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Hotel Reservations{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">Hotel Reservations</h2>
+
+<!-- Search and Sort -->
+<div class="d-flex justify-content-between mb-4">
+    <form method="get" class="d-flex">
+        <input type="text" name="query" class="form-control me-2" placeholder="Search by hotel name" value="{{ request.GET.query }}">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+    <a href="?sort=rating" class="btn btn-secondary">Sort by Rating (High to Low)</a>
+</div>
+
+<!-- Hotel List -->
+<div class="row">
+    {% for hotel in hotels %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                {% if hotel.image %}
+                    <img src="{{ hotel.image.url }}" class="card-img-top" alt="Hotel Image">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ hotel.name }}</h5>
+                    <p class="card-text"><strong>Location:</strong> {{ hotel.location }}</p>
+                    <p class="card-text"><strong>Phone:</strong> {{ hotel.phone_number }}</p>
+                    <p class="card-text"><strong>Room Rent:</strong> {{ hotel.room_rent }}</p>
+                    <p class="card-text"><strong>Facilities:</strong> {{ hotel.facilities }}</p>
+                    <p class="card-text"><strong>Rating:</strong> {% if hotel.rating %}{{ hotel.rating }} Star{% else %}Not Rated{% endif %}</p>
+                    <button class="btn btn-primary book-hotel" data-id="{{ hotel.id }}">Book Hotel</button>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p class="text-center">No hotels found.</p>
+    {% endfor %}
+</div>
+
+<script>
+document.querySelectorAll('.book-hotel').forEach(button => {
+    button.addEventListener('click', function() {
+        const id = this.dataset.id;
+        fetch('{% url "add_to_cart" %}', {
+            method: 'POST',
+            headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `type=hotel&id=${id}`
+        }).then(response => response.json()).then(data => {
+            if (data.status === 'added') {
+                alert('Hotel added to cart');
+            } else if (data.status === 'already_added') {
+                alert('Hotel already in cart');
+            }
+        });
+    });
+});
+</script>
+
+{% endblock %}

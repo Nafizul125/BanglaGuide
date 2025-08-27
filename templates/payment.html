@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">Payment</h2>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h5>Bill Details</h5>
+        {% for item in cart %}
+            <p>{{ item.name }} ({{ item.type | capfirst }}): {{ item.subtotal }} Tk</p>
+        {% endfor %}
+        <h4>Total: {{ total }} Tk</h4>
+    </div>
+</div>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label>Payment Option:</label>
+        <select name="payment_option" class="form-control">
+            <option value="card">By Card</option>
+            <option value="bkash">By Bkash</option>
+            <option value="nagad">By Nagad</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Make Payment</button>
+</form>
+
+{% endblock %}
