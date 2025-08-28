@@ -15,9 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.shortcuts import redirect
 from accounts.views import register, user_login, user_logout, provider_register, provider_login, provider_home
 from tourism.views import homepage
 from hotels.views import hotel_list, hotel_add
@@ -27,6 +28,7 @@ from bookings.views import add_to_cart, cart, payment
 from chat.views import chat  # New import
 
 urlpatterns = [
+    path('', lambda request: redirect('homepage', permanent=False)),  # Redirect root to homepage
     path('admin/', admin.site.urls),
     path('register/', register, name='register'),
     path('provider_register/', provider_register, name='provider_register'),

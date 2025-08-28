@@ -3,24 +3,24 @@
 {% block title %}Add Car{% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card shadow-lg p-4" style="width: 500px;">
-        <h2 class="text-center mb-4">Add Your Car</h2>
+<div class="flex justify-center items-center min-h-[80vh]">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
+        <h2 class="text-2xl font-bold text-center mb-6">Add Your Car</h2>
         <form method="post">
             {% csrf_token %}
-            <div class="mb-3">
+            <div class="mb-4">
                 {{ form.model.label_tag }} {{ form.model }} {{ form.model.errors }}
             </div>
-            <div class="mb-3">
+            <div class="mb-4">
                 {{ form.rent.label_tag }} {{ form.rent }} {{ form.rent.errors }}
             </div>
-            <div class="mb-3">
+            <div class="mb-4">
                 {{ form.number.label_tag }} {{ form.number }} {{ form.number.errors }}
             </div>
-            <div class="mb-3">
+            <div class="mb-4">
                 {{ form.city.label_tag }} {{ form.city }} {{ form.city.errors }}
             </div>
-            <button type="submit" class="btn btn-primary w-100">Submit</button>
+            <button type="submit" class="bg-primary text-white px-6 py-3 rounded-full w-full font-semibold hover:bg-blue-700">Submit</button>
         </form>
     </div>
 </div>

@@ -43,7 +43,9 @@ INSTALLED_APPS = [
     'guides',    # Guides app
     'cars',      # Cars app
     'bookings',  # Bookings app
-    'chat',      # New chat app
+    'chat',      # Chat app
+    'tailwind',
+    'theme',  # Add this for Tailwind
 ]
 
 MIDDLEWARE = [
@@ -145,4 +147,11 @@ LOGIN_REDIRECT_URL = 'homepage'  # After login, redirect to homepage
 LOGIN_URL = 'login'  # If not logged in, redirect to login page
 
 # Weather API Key (sign up at openweathermap.org)
-WEATHER_API_KEY = 'e4b6f660c010a74239e58065694bd450'
+WEATHER_API_KEY = 'your_openweathermap_api_key_here'
+
+# Tailwind Configuration
+TAILWIND_APP_NAME = 'theme'  # Tailwind theme app (add 'theme' later)
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
+NPM_BIN_PATH = 'C:/Program Files/nodejs/npm.cmd'  # Adjust for your OS (use 'which npm' on macOS/Linux)

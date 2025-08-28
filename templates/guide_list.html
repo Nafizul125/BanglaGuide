@@ -3,39 +3,35 @@
 {% block title %}Local Guides{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-4">Local Guides</h2>
+<h2 class="text-3xl font-bold text-center mb-6">Local Guides</h2>
 
-<!-- Search, Sort, and Filter -->
-<div class="d-flex justify-content-between mb-4 flex-wrap">
-    <form method="get" class="d-flex me-2">
-        <input type="text" name="query" class="form-control me-2" placeholder="Search by guide name" value="{{ request.GET.query }}">
-        <button type="submit" class="btn btn-primary">Search</button>
+<!-- Search, Sort, Filter -->
+<div class="flex justify-between mb-6 flex-wrap gap-4">
+    <form method="get" class="flex space-x-2">
+        <input type="text" name="query" class="border rounded px-4 py-2" placeholder="Search by guide name" value="{{ request.GET.query }}">
+        <button type="submit" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700">Search</button>
     </form>
-    <a href="?sort=division" class="btn btn-secondary me-2">Sort by Division</a>
-    <div class="btn-group">
-        <a href="?language=Bangla" class="btn btn-info">Bangla</a>
-        <a href="?language=English" class="btn btn-info">English</a>
-        <a href="?language=Spanish" class="btn btn-info">Spanish</a>
+    <a href="?sort=division" class="bg-secondary text-white px-4 py-2 rounded hover:bg-gray-600">Sort by Division</a>
+    <div class="space-x-2">
+        <a href="?language=Bangla" class="bg-blue-200 text-blue-800 px-4 py-2 rounded hover:bg-blue-300">Bangla</a>
+        <a href="?language=English" class="bg-blue-200 text-blue-800 px-4 py-2 rounded hover:bg-blue-300">English</a>
+        <a href="?language=Spanish" class="bg-blue-200 text-blue-800 px-4 py-2 rounded hover:bg-blue-300">Spanish</a>
     </div>
 </div>
 
 <!-- Guide List -->
-<div class="row">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     {% for guide in guides %}
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">{{ guide.name }}</h5>
-                    <p class="card-text"><strong>Email:</strong> {{ guide.email }}</p>
-                    <p class="card-text"><strong>Mobile:</strong> {{ guide.mobile }}</p>
-                    <p class="card-text"><strong>Division:</strong> {{ guide.division }}</p>
-                    <p class="card-text"><strong>Languages:</strong> {{ guide.language }}</p>
-                    <button class="btn btn-primary book-guide" data-id="{{ guide.id }}">Book Guide</button>
-                </div>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition">
+            <h5 class="text-xl font-semibold mb-2">{{ guide.name }}</h5>
+            <p class="text-gray-600 mb-1"><strong>Email:</strong> {{ guide.email }}</p>
+            <p class="text-gray-600 mb-1"><strong>Mobile:</strong> {{ guide.mobile }}</p>
+            <p class="text-gray-600 mb-1"><strong>Division:</strong> {{ guide.division }}</p>
+            <p class="text-gray-600 mb-4"><strong>Languages:</strong> {{ guide.language }}</p>
+            <button class="book-guide bg-primary text-white px-4 py-2 rounded w-full hover:bg-blue-700" data-id="{{ guide.id }}">Book Guide</button>
         </div>
     {% empty %}
-        <p class="text-center">No guides found.</p>
+        <p class="text-center text-gray-600 col-span-3">No guides found.</p>
     {% endfor %}
 </div>
 

@@ -3,38 +3,34 @@
 {% block title %}Hotel Reservations{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-4">Hotel Reservations</h2>
+<h2 class="text-3xl font-bold text-center mb-6">Hotel Reservations</h2>
 
 <!-- Search and Sort -->
-<div class="d-flex justify-content-between mb-4">
-    <form method="get" class="d-flex">
-        <input type="text" name="query" class="form-control me-2" placeholder="Search by hotel name" value="{{ request.GET.query }}">
-        <button type="submit" class="btn btn-primary">Search</button>
+<div class="flex justify-between mb-6">
+    <form method="get" class="flex space-x-2">
+        <input type="text" name="query" class="border rounded px-4 py-2" placeholder="Search by hotel name" value="{{ request.GET.query }}">
+        <button type="submit" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700">Search</button>
     </form>
-    <a href="?sort=rating" class="btn btn-secondary">Sort by Rating (High to Low)</a>
+    <a href="?sort=rating" class="bg-secondary text-white px-4 py-2 rounded hover:bg-gray-600">Sort by Rating (High to Low)</a>
 </div>
 
 <!-- Hotel List -->
-<div class="row">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     {% for hotel in hotels %}
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                {% if hotel.image %}
-                    <img src="{{ hotel.image.url }}" class="card-img-top" alt="Hotel Image">
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ hotel.name }}</h5>
-                    <p class="card-text"><strong>Location:</strong> {{ hotel.location }}</p>
-                    <p class="card-text"><strong>Phone:</strong> {{ hotel.phone_number }}</p>
-                    <p class="card-text"><strong>Room Rent:</strong> {{ hotel.room_rent }}</p>
-                    <p class="card-text"><strong>Facilities:</strong> {{ hotel.facilities }}</p>
-                    <p class="card-text"><strong>Rating:</strong> {% if hotel.rating %}{{ hotel.rating }} Star{% else %}Not Rated{% endif %}</p>
-                    <button class="btn btn-primary book-hotel" data-id="{{ hotel.id }}">Book Hotel</button>
-                </div>
-            </div>
+        <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition">
+            {% if hotel.image %}
+                <img src="{{ hotel.image.url }}" class="w-full h-48 object-cover rounded-t-lg mb-4" alt="Hotel Image">
+            {% endif %}
+            <h5 class="text-xl font-semibold mb-2">{{ hotel.name }}</h5>
+            <p class="text-gray-600 mb-1"><strong>Location:</strong> {{ hotel.location }}</p>
+            <p class="text-gray-600 mb-1"><strong>Phone:</strong> {{ hotel.phone_number }}</p>
+            <p class="text-gray-600 mb-1"><strong>Room Rent:</strong> {{ hotel.room_rent }}</p>
+            <p class="text-gray-600 mb-1"><strong>Facilities:</strong> {{ hotel.facilities }}</p>
+            <p class="text-gray-600 mb-4"><strong>Rating:</strong> {% if hotel.rating %}{{ hotel.rating }} Star{% else %}Not Rated{% endif %}</p>
+            <button class="book-hotel bg-primary text-white px-4 py-2 rounded w-full hover:bg-blue-700" data-id="{{ hotel.id }}">Book Hotel</button>
         </div>
     {% empty %}
-        <p class="text-center">No hotels found.</p>
+        <p class="text-center text-gray-600 col-span-3">No hotels found.</p>
     {% endfor %}
 </div>
 

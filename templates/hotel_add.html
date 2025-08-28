@@ -3,33 +3,27 @@
 {% block title %}Add Hotel{% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card shadow-lg p-4" style="width: 500px;">
-        <h2 class="text-center mb-4">Add Your Hotel</h2>
+<div class="flex justify-center items-center min-h-[80vh]">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
+        <h2 class="text-2xl font-bold text-center mb-6">Add Your Hotel</h2>
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            <div class="mb-3">
+            <div class="mb-4">
                 {{ form.name.label_tag }} {{ form.name }} {{ form.name.errors }}
             </div>
-            <div class="mb-3">
-                {{ form.location.label_tag }} {{ form.location }} {{ form.location.errors }}
-            </div>
-            <div class="mb-3">
-                {{ form.phone_number.label_tag }} {{ form.phone_number }} {{ form.phone_number.errors }}
-            </div>
-            <div class="mb-3">
+            <div class="mb-4">
                 {{ form.room_rent.label_tag }} {{ form.room_rent }} {{ form.room_rent.errors }}
             </div>
-            <div class="mb-3">
-                {{ form.facilities.label_tag }} {{ form.facilities }} {{ form.facilities.errors }}
+            <div class="mb-4">
+                {{ form.city.label_tag }} {{ form.city }} {{ form.city.errors }}
             </div>
-            <div class="mb-3">
+            <div class="mb-4">
+                {{ form.image.label_tag }} {{ form.image }} {{ form.image.errors }}  <!-- New image field -->
+            </div>
+            <div class="mb-4">
                 {{ form.rating.label_tag }} {{ form.rating }} {{ form.rating.errors }}
             </div>
-            <div class="mb-3">
-                {{ form.image.label_tag }} {{ form.image }} {{ form.image.errors }}
-            </div>
-            <button type="submit" class="btn btn-primary w-100">Submit</button>
+            <button type="submit" class="bg-primary text-white px-6 py-3 rounded-full w-full font-semibold hover:bg-blue-700">Submit</button>
         </form>
     </div>
 </div>

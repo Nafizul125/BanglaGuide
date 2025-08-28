@@ -3,44 +3,42 @@
 {% block title %}Cart{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-4">Your Cart</h2>
+<h2 class="text-3xl font-bold text-center mb-6">Your Cart</h2>
 
-<div class="row">
-    <div class="col-md-8">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="md:col-span-2">
         {% for item in cart %}
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">{{ item.name }} ({{ item.type | capfirst }})</h5>
-                    {% if item.type == 'hotel' %}
-                        <p>Single Room: <button class="btn btn-sm btn-secondary decrease" data-index="{{ forloop.counter0 }}" data-type="single">-</button> {{ item.single_qty }} <button class="btn btn-sm btn-secondary increase" data-index="{{ forloop.counter0 }}" data-type="single">+</button> ({{ item.single_price }} Tk)</p>
-                        <p>Double Room: <button class="btn btn-sm btn-secondary decrease" data-index="{{ forloop.counter0 }}" data-type="double">-</button> {{ item.double_qty }} <button class="btn btn-sm btn-secondary increase" data-index="{{ forloop.counter0 }}" data-type="double">+</button> ({{ item.double_price }} Tk)</p>
-                    {% else %}
-                        <p>Price: {{ item.price }} Tk</p>
-                    {% endif %}
-                    <p>Subtotal: {{ item.subtotal }} Tk</p>
-                </div>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-4">
+                <h5 class="text-xl font-semibold mb-2">{{ item.name }} ({{ item.type | capfirst }})</h5>
+                {% if item.type == 'hotel' %}
+                    <p class="flex items-center space-x-2 mb-2">Single Room: <button class="bg-gray-200 px-2 py-1 rounded decrease" data-index="{{ forloop.counter0 }}" data-type="single">-</button> {{ item.single_qty }} <button class="bg-gray-200 px-2 py-1 rounded increase" data-index="{{ forloop.counter0 }}" data-type="single">+</button> ({{ item.single_price }} Tk)</p>
+                    <p class="flex items-center space-x-2 mb-4">Double Room: <button class="bg-gray-200 px-2 py-1 rounded decrease" data-index="{{ forloop.counter0 }}" data-type="double">-</button> {{ item.double_qty }} <button class="bg-gray-200 px-2 py-1 rounded increase" data-index="{{ forloop.counter0 }}" data-type="double">+</button> ({{ item.double_price }} Tk)</p>
+                {% else %}
+                    <p class="mb-4">Price: {{ item.price }} Tk</p>
+                {% endif %}
+                <p class="text-gray-600">Subtotal: {{ item.subtotal }} Tk</p>
             </div>
         {% endfor %}
-        <h4>Total: {{ total }} Tk</h4>
-        <a href="{% url 'payment' %}" class="btn btn-primary">Proceed to Payment</a>
+        <h4 class="text-2xl font-bold mt-4">Total: {{ total }} Tk</h4>
+        <a href="{% url 'payment' %}" class="bg-primary text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 block text-center mt-4">Proceed to Payment</a>
     </div>
-    <div class="col-md-4">
-        <form method="post">
+    <div>
+        <form method="post" class="bg-white p-6 rounded-lg shadow-md">
             {% csrf_token %}
             <input type="hidden" name="action" value="update_dates">
-            <div class="mb-3">
-                <label>Start Date:</label>
-                <input type="date" name="start_date" value="{{ start_date }}" class="form-control" min="{{ today|date:'Y-m-d' }}" max="{{ future_date|date:'Y-m-d' }}">
+            <div class="mb-4">
+                <label class="block text-gray-700">Start Date:</label>
+                <input type="date" name="start_date" value="{{ start_date }}" class="border rounded w-full px-4 py-2" min="{{ today|date:'Y-m-d' }}" max="{{ future_date|date:'Y-m-d' }}">
             </div>
-            <div class="mb-3">
-                <label>End Date:</label>
-                <input type="date" name="end_date" value="{{ end_date }}" class="form-control" min="{{ start_date|default:today|date:'Y-m-d' }}" max="{{ future_date|date:'Y-m-d' }}">
+            <div class="mb-4">
+                <label class="block text-gray-700">End Date:</label>
+                <input type="date" name="end_date" value="{{ end_date }}" class="border rounded w-full px-4 py-2" min="{{ start_date|default:today|date:'Y-m-d' }}" max="{{ future_date|date:'Y-m-d' }}">
             </div>
-            <button type="submit" class="btn btn-secondary">Update Dates</button>
+            <button type="submit" class="bg-secondary text-white px-4 py-2 rounded w-full hover:bg-gray-600">Update Dates</button>
         </form>
         {% if weather %}
-            <div class="mt-4">
-                <h5>Weather on {{ start_date }} in Dhaka</h5>
+            <div class="bg-white p-6 rounded-lg shadow-md mt-4">
+                <h5 class="text-xl font-semibold mb-2">Weather on {{ start_date }} in Dhaka</h5>
                 {% if weather.temp %}
                     <p>Temperature: {{ weather.temp }} °C</p>
                     <p>Condition: {{ weather.condition }}</p>
