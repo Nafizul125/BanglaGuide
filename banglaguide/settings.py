@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',  # Add this for Tailwind
     'channels',  # WebSocket support
+    'weather',  # Weather API app (from final branch)
 ]
 
 MIDDLEWARE = [
@@ -122,8 +123,14 @@ CHANNEL_LAYERS = {
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-if 'DATABASE_URL' in os.environ:
-    # Use DATABASE_URL when provided (e.g., Render). Enforce SSL for hosted Postgres.
+if os.getenv("USE_SQLITE", "0") == "1":
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+elif 'DATABASE_URL' in os.environ:
     DATABASES = {
         'default': dj_database_url.parse(
             os.environ['DATABASE_URL'],
@@ -132,7 +139,6 @@ if 'DATABASE_URL' in os.environ:
         )
     }
     if DEBUG:
-        # Lightweight visibility during local dev to confirm remote host in use.
         print("[settings] Using external DATABASE_URL host:", DATABASES['default'].get('HOST'))
 else:
     DATABASES = {

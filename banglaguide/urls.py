@@ -27,6 +27,13 @@ from cars.views import car_list, car_add
 from bookings.views import add_to_cart, cart, payment
 from chat.views import chat  # New import
 
+# Optional weather app inclusion
+try:
+    import weather.urls  # noqa: F401
+    _has_weather = True
+except Exception:
+    _has_weather = False
+
 urlpatterns = [
     path('', lambda request: redirect('homepage', permanent=False)),  # Redirect root to homepage
     path('admin/', admin.site.urls),
@@ -47,4 +54,9 @@ urlpatterns = [
     path('cart/', cart, name='cart'),
     path('payment/', payment, name='payment'),
     path('chat/', chat, name='chat'),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+if _has_weather:
+    urlpatterns.append(path('weather/', include('weather.urls')))
+
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
