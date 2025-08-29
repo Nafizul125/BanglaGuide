@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Cars — Browse & Rent{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <div>
+      <h2 class="mb-0">Find a Car</h2>
+      <small class="text-muted">Search, filter by dates, and sort results</small>
+    </div>
+    {% if request.user.is_authenticated and request.user.is_service_provider %}
+      <a href="{% url 'car_add' %}" class="btn btn-outline-primary">
+        <i class="bi bi-plus-circle"></i> Add Car
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- Apply-only form (no auto-submit on typing) -->
+  <form method="get" id="filtersForm" class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-4">
+          <label class="form-label">Search</label>
+          <input type="text" name="query" class="form-control" placeholder="Model or City" value="{{ request.GET.query }}">
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label">Start date</label>
+          <input type="date" name="start" class="form-control" value="{{ request.GET.start }}">
+        </div>
+        <div class="col-6 col-md-3">
+          <label class="form-label">End date</label>
+          <input type="date" name="end" class="form-control" value="{{ request.GET.end }}">
+        </div>
+        <div class="col-12 col-md-2">
+          <label class="form-label">Sort</label>
+          <select name="sort" class="form-select">
+            <option value="" {% if not request.GET.sort %}selected{% endif %}>Default</option>
+            <option value="rent_asc" {% if request.GET.sort == 'rent_asc' %}selected{% endif %}>Rent ↑</option>
+            <option value="rent_desc" {% if request.GET.sort == 'rent_desc' %}selected{% endif %}>Rent ↓</option>
+            <option value="newest" {% if request.GET.sort == 'newest' %}selected{% endif %}>Newest</option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-3 d-flex gap-2">
+        <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Apply</button>
+        <a class="btn btn-light border" href="{% url 'car_list' %}">Reset</a>
+      </div>
+    </div>
+  </form>
+
+  <div id="grid" class="row g-4">
+    {% for car in cars %}
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="card h-100 shadow-sm border-0">
+          <!-- NEW: thumbnail area -->
+          <div class="ratio ratio-16x9">
+            {% if car.main_image %}
+              <img src="{{ car.main_image.url }}" alt="{{ car.model }}" class="w-100 h-100 rounded-top" style="object-fit:cover;">
+            {% else %}
+              <div class="d-flex align-items-center justify-content-center bg-light rounded-top">
+                <i class="bi bi-image text-muted" style="font-size:2rem;"></i>
+              </div>
+            {% endif %}
+          </div>
+
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start">
+              <h5 class="card-title mb-1"><i class="bi bi-car-front"></i> {{ car.model }}</h5>
+              <span class="badge bg-light text-secondary">#{{ car.id }}</span>
+            </div>
+            <p class="mb-1"><strong>City:</strong> {{ car.city }}</p>
+            <p class="mb-1"><strong>Rent:</strong> Tk {{ car.rent }} / day</p>
+            <p class="text-muted small mb-3"><strong>Driver:</strong> {{ car.number }}</p>
+
+            <div class="mt-auto d-flex gap-2">
+              <a href="{% url 'car_detail' car.id %}" class="btn btn-primary w-100">Reserve Car</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-emoji-frown display-6 d-block"></i>
+          <div class="mt-2">No cars matched your filters.</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

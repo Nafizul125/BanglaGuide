@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Homepage{% endblock %}
+
+{% block content %}
+<!-- Modern Hero Section -->
+<div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-16 rounded-lg shadow-lg mb-8">
+    <div class="text-center">
+        <h1 class="text-4xl font-bold mb-4">Welcome to BanglaGuide, {{ user.name }}!</h1>
+        <p class="text-lg mb-6">Your ultimate Bangladeshi Tourist Management System. Discover spots, book hotels, and plan your adventure.</p>
+        <div class="space-x-4">
+            <a href="{% url 'hotel_list' %}" class="bg-white text-primary px-6 py-3 rounded-full font-semibold hover:bg-gray-100 shadow">Hotel Reservation</a>
+            <a href="{% url 'guide_list' %}" class="bg-white text-primary px-6 py-3 rounded-full font-semibold hover:bg-gray-100 shadow">Local Guide</a>
+            <a href="{% url 'car_list' %}" class="bg-white text-primary px-6 py-3 rounded-full font-semibold hover:bg-gray-100 shadow">Car Rent</a>
+        </div>
+    </div>
+</div>
+
+<!-- Tourist Spot Search -->
+<div class="mb-8">
+    <h4 class="text-2xl font-bold text-center mb-4">Search your next destination</h4>
+    <form method="get" class="flex justify-center space-x-2">
+        {{ form.district.label_tag }} 
+        {{ form.district }} 
+        <button type="submit" class="bg-primary text-white px-4 py-2 rounded hover:bg-blue-700">Search</button>
+    </form>
+</div>
+
+<!-- Search Results -->
+{% if district_name %}
+    <h2 class="text-3xl font-bold text-center mb-6">Things to do in {{ district_name }} City</h2>
+    {% if spots %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for spot in spots %}
+                <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
+                    <h5 class="text-xl font-semibold mb-2">{{ spot.name }}</h5>
+                    <p class="text-gray-600">{{ spot.description }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-center text-gray-600 mt-4">No tourist spots found for {{ district_name }}.</p>
+    {% endif %}
+{% endif %}
+
+<!-- Bottom Buttons -->
+<div class="text-center mt-8 space-x-4">
+    <a href="{% url 'cart' %}" class="bg-green-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-green-600">Cart</a>
+    <a href="{% url 'chat' %}" class="bg-blue-500 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-600">Chat</a>
+</div>
+{% endblock %}

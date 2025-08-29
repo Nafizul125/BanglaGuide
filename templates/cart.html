@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+<h2 class="text-3xl font-bold text-center mb-8">Your Cart</h2>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <!-- Items -->
+    <div class="lg:col-span-2 space-y-5">
+        {% for item in cart %}
+            <div class="group bg-white/90 backdrop-blur rounded-xl shadow-sm ring-1 ring-gray-100 hover:shadow-md transition p-6 flex flex-col gap-4" data-type="{{ item.type }}" data-id="{{ item.id }}">
+                <div class="flex justify-between items-start gap-6 flex-wrap">
+                    <div class="min-w-[220px]">
+                        <h5 class="text-xl font-semibold mb-2">{{ item.name }} <span class="text-sm font-medium text-blue-600">({{ item.type|capfirst }})</span></h5>
+                        {% if item.type == 'hotel' %}
+                            <div class="space-y-2 text-sm">
+                                <div class="flex items-center flex-wrap gap-2">
+                                    <span class="font-medium">Single:</span>
+                                    <button type="button" class="qty-btn decrease" data-index="{{ forloop.counter0 }}" data-type="single">-</button>
+                                    <span class="inline-block w-6 text-center">{{ item.single_qty }}</span>
+                                    <button type="button" class="qty-btn increase" data-index="{{ forloop.counter0 }}" data-type="single">+</button>
+                                    <span class="text-gray-500">({{ item.single_price }} Tk)</span>
+                                </div>
+                                <div class="flex items-center flex-wrap gap-2">
+                                    <span class="font-medium">Double:</span>
+                                    <button type="button" class="qty-btn decrease" data-index="{{ forloop.counter0 }}" data-type="double">-</button>
+                                    <span class="inline-block w-6 text-center">{{ item.double_qty }}</span>
+                                    <button type="button" class="qty-btn increase" data-index="{{ forloop.counter0 }}" data-type="double">+</button>
+                                    <span class="text-gray-500">({{ item.double_price }} Tk)</span>
+                                </div>
+                            </div>
+                        {% else %}
+                            <p class="text-sm text-gray-600 mb-1">Price: {{ item.price }} Tk</p>
+                        {% endif %}
+                        <p class="mt-3 text-gray-700"><span class="font-semibold">Subtotal:</span> {{ item.subtotal }} Tk</p>
+                    </div>
+                    <div class="flex flex-col items-end gap-3">
+                        {% if item.type == 'car' %}
+                            <button type="button" class="js-remove-item text-sm px-3 py-1.5 rounded-full border border-red-300 text-red-600 hover:bg-red-50 font-medium">Remove</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <p class="text-gray-600">Your cart is empty.</p>
+        {% endfor %}
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-gray-200">
+            <h4 class="text-2xl font-bold">Total: {{ total }} Tk</h4>
+            <a href="{% url 'payment' %}" class="inline-flex justify-center items-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold px-8 py-3 rounded-full shadow focus:outline-none focus:ring focus:ring-blue-300">Proceed to Payment</a>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="space-y-6">
+        <form method="post" class="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-6 space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_dates">
+            <div>
+                <label class="block text-sm font-medium mb-1">Start Date</label>
+                <input type="date" name="start_date" value="{{ start_date }}" class="w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500" min="{{ today|date:'Y-m-d' }}" max="{{ future_date|date:'Y-m-d' }}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">End Date</label>
+                <input type="date" name="end_date" value="{{ end_date }}" class="w-full rounded-md border-gray-300 focus:ring-blue-500 focus:border-blue-500" min="{{ start_date|default:today|date:'Y-m-d' }}" max="{{ future_date|date:'Y-m-d' }}">
+            </div>
+            <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-2.5 rounded-md transition">Update Dates</button>
+        </form>
+
+        <!-- Daily Weather Panel -->
+        <div id="weather-box" data-city="Dhaka" class="bg-white rounded-xl shadow-sm ring-1 ring-gray-100 p-6">
+            <h5 class="text-lg font-semibold mb-3">Daily Weather</h5>
+            <div id="weather-content" class="text-sm text-gray-500 mb-2">
+                {% if start_date and end_date %}
+                    Loading daily weather from {{ start_date }} to {{ end_date }} in Dhaka…
+                {% elif start_date %}
+                    Loading weather for {{ start_date }} in Dhaka…
+                {% else %}
+                    Pick start and end dates to see daily forecasts.
+                {% endif %}
+            </div>
+            <ul id="weather-list" class="space-y-2 text-sm"></ul>
+            <p class="mt-3 text-xs text-gray-400">Forecast covers next 5 days only.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+// Tailwind styled qty buttons
+document.querySelectorAll('.qty-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        const index=btn.dataset.index; const type=btn.dataset.type; const inc=btn.classList.contains('increase');
+        fetch('{% url "cart" %}',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}','Content-Type':'application/x-www-form-urlencoded'},body:`action=update_qty&index=${index}&${type}_qty=${inc?1:-1}`}).then(()=>location.reload());
+    });
+});
+
+// Remove car item
+document.querySelectorAll('.js-remove-item').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+        const card=btn.closest('[data-id]');
+        const itemType=card.dataset.type; const itemId=card.dataset.id;
+        fetch('{% url "cart" %}',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}','Content-Type':'application/x-www-form-urlencoded'},body:`action=remove_item&item_type=${encodeURIComponent(itemType)}&item_id=${encodeURIComponent(itemId)}`}).then(()=>location.reload());
+    });
+});
+
+// Weather panel logic (range or single-day)
+(function(){
+    const box=document.getElementById('weather-box'); if(!box) return; const list=document.getElementById('weather-list'); const msg=document.getElementById('weather-content');
+    const city=box.dataset.city||'Dhaka'; const startInput=document.querySelector('input[name="start_date"]'); const endInput=document.querySelector('input[name="end_date"]');
+    const reasons={outside_window:'Outside forecast window.',no_data:'No data.',bad_request:'Invalid request.',api_error:'Service error.'};
+    const fDate=d=>{const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dy=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${dy}`;};
+    const range=(s,e)=>{const out=[];const d=new Date(s),last=new Date(e);while(d<=last){out.push(fDate(d));d.setDate(d.getDate()+1);}return out;};
+    async function fill(li,dateStr){try{const qs=new URLSearchParams({city,date:dateStr});const r=await fetch(`/weather/forecast/?${qs}`);const data=await r.json();if(data.ok){li.innerHTML=`<span>${dateStr}</span><span><strong>${data.temp} °C</strong> · ${data.condition}</span>`;}else{li.innerHTML=`<span>${dateStr}</span><span class='text-gray-400'>${reasons[data.reason]||'Service error.'}</span>`;}}catch(e){li.innerHTML=`<span>${dateStr}</span><span class='text-gray-400'>Service error.</span>`;}}
+    async function load(s,e){ if(!s&&!e){msg.textContent='Pick start and end dates to see daily forecasts.'; list.innerHTML=''; return;} if(s&&!e){msg.textContent=`Loading weather for ${s} in ${city}…`; list.innerHTML=''; const li=document.createElement('li'); li.className='flex justify-between items-center rounded bg-gray-50 px-3 py-2'; li.innerHTML=`<span>${s}</span><span class='text-gray-400'>Loading…</span>`; list.appendChild(li); await fill(li,s); return;} msg.textContent=`Loading daily weather from ${s} to ${e} in ${city}…`; list.innerHTML=''; const start=new Date(s),end=new Date(e); if(isNaN(start)||isNaN(end)||start>end){msg.textContent='Choose a valid date range.'; return;} range(start,end).forEach(dateStr=>{const li=document.createElement('li'); li.className='flex justify-between items-center rounded bg-gray-50 px-3 py-2'; li.innerHTML=`<span>${dateStr}</span><span class='text-gray-400'>Loading…</span>`; list.appendChild(li); fill(li,dateStr);}); }
+    const initS='{{ start_date|default:"" }}'; const initE='{{ end_date|default:"" }}'; if(initS||initE) load(initS,initE); if(startInput) startInput.addEventListener('change',()=>load(startInput.value,endInput?endInput.value:'')); if(endInput) endInput.addEventListener('change',()=>load(startInput?startInput.value:'',endInput.value));
+})();
+</script>
+{% endblock %}

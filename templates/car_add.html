@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}{% if editing %}Edit Car{% else %}Add Car{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 760px;">
+  <a href="{% url 'car_list' %}" class="text-decoration-none">&larr; Back to Cars</a>
+
+  <div class="card shadow-sm border-0 mt-3">
+    <div class="card-body">
+      <h3 class="mb-2">{% if editing %}Edit Car{% else %}Add a Car{% endif %}</h3>
+      <p class="text-muted mb-4">
+        Provide basic details. New or edited listings require admin approval before they go live.
+      </p>
+
+      <!-- IMPORTANT: enctype so images get uploaded -->
+      <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Model</label>
+            {{ form.model }}
+          </div>
+          <div class="col-6">
+            <label class="form-label">Daily Rent (Tk)</label>
+            {{ form.rent }}
+          </div>
+          <div class="col-6">
+            <label class="form-label">City</label>
+            {{ form.city }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Driver Contact</label>
+            {{ form.number }}
+            <div class="form-text">We recommend including country code, e.g. +8801XXXXXXXXX</div>
+          </div>
+
+          <!-- NEW: main image upload -->
+          <div class="col-12">
+            <label class="form-label">Main Image</label>
+            {{ form.main_image }}
+            <div class="form-text">JPG, PNG, WEBP, or AVIF. This will be shown in listings.</div>
+          </div>
+
+          <!-- Preview if editing and image already set -->
+          {% if editing and car.main_image %}
+          <div class="col-12">
+            <label class="form-label d-block">Current Image</label>
+            <img src="{{ car.main_image.url }}" alt="{{ car.model }}" class="img-fluid rounded border" style="max-height:240px;object-fit:cover;">
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button class="btn btn-primary" type="submit">
+            {% if editing %}Save Changes{% else %}Create Listing{% endif %}
+          </button>
+          <a class="btn btn-light border" href="{% url 'car_list' %}">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Add bootstrap classes to default Django widgets if needed (no widget-tweaks dependency)
+  (function(){
+    document.querySelectorAll('input, select, textarea').forEach(el => {
+      if (!el.className.includes('form-control') && el.type !== 'checkbox' && el.type !== 'radio' && el.type !== 'file') {
+        el.classList.add('form-control');
+      }
+      if (el.type === 'file' && !el.className.includes('form-control')) {
+        el.classList.add('form-control');
+      }
+    });
+  })();
+</script>
+{% endblock %}

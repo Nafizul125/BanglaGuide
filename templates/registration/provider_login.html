@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Service Provider Login{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center min-h-[80vh]">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
+        <h2 class="text-2xl font-bold text-center mb-6">Service Provider Login</h2>
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-4">
+                {{ form.username.label_tag }} {{ form.username }} {{ form.username.errors }}
+            </div>
+            <div class="mb-4">
+                {{ form.password.label_tag }} {{ form.password }} {{ form.password.errors }}
+            </div>
+            <button type="submit" class="bg-primary text-white px-6 py-3 rounded-full w-full font-semibold hover:bg-blue-700">Login</button>
+        </form>
+        <div class="text-center mt-4">
+            <a href="{% url 'provider_register' %}" class="text-blue-600 hover:text-blue-800 block">Register as Service Provider</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

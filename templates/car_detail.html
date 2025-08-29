@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+{% block title %}{{ car.model }} · Car{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <a href="{% url 'car_list' %}" class="text-decoration-none">&larr; Back to Cars</a>
+
+  <div class="row g-4 mt-1">
+    <!-- LEFT: Image + Info -->
+    <div class="col-12 col-lg-7">
+      <!-- Image card -->
+      <div class="card shadow-sm border-0 mb-3">
+        <div class="ratio ratio-16x9">
+          {% if car.main_image %}
+            <img src="{{ car.main_image.url }}" alt="{{ car.model }}" class="w-100 h-100 rounded-top" style="object-fit:cover;">
+          {% else %}
+            <div class="d-flex align-items-center justify-content-center bg-light rounded-top">
+              <div class="text-center text-muted p-4">
+                <i class="bi bi-image" style="font-size:2rem;"></i>
+                <div class="mt-2">No image uploaded</div>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Info card -->
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h3 class="mb-1"><i class="bi bi-car-front"></i> {{ car.model }}</h3>
+              <div class="text-muted">City: {{ car.city }}</div>
+            </div>
+            <div class="text-end">
+              <div class="fs-5 fw-semibold">Tk {{ car.rent }}</div>
+              <small class="text-muted">per day</small>
+            </div>
+          </div>
+
+          <hr>
+          <div class="row">
+            <div class="col-6">
+              <p class="mb-1"><strong>Driver</strong></p>
+              <p class="text-muted">{{ car.number }}</p>
+            </div>
+            <div class="col-6 text-end">
+              {% if user.is_authenticated and user.is_service_provider and car.owner_id == user.id %}
+                <a class="btn btn-outline-secondary btn-sm" href="{% url 'car_edit' car.id %}">
+                  <i class="bi bi-pencil-square"></i> Edit
+                </a>
+                <form method="post" action="{% url 'car_delete' car.id %}" class="d-inline">
+                  {% csrf_token %}
+                  <button class="btn btn-outline-danger btn-sm" type="submit">
+                    <i class="bi bi-trash"></i> Delete
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Booking -->
+    <div class="col-12 col-lg-5">
+      <div class="card shadow-sm border-0">
+        <div class="card-body">
+          <h5 class="mb-3">Pick your dates</h5>
+
+          <!-- Inline Availability Calendar -->
+          <div id="availability" class="mb-3">
+            <div class="d-flex gap-3 flex-wrap">
+              <div class="calendar card border-0 shadow-sm">
+                <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong id="cal1-title"></strong>
+                  </div>
+                  <div id="cal1-grid" class="calendar-grid"></div>
+                </div>
+              </div>
+              <div class="calendar card border-0 shadow-sm">
+                <div class="card-body p-3">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong id="cal2-title"></strong>
+                  </div>
+                  <div id="cal2-grid" class="calendar-grid"></div>
+                </div>
+              </div>
+            </div>
+            <small class="text-muted d-block mt-2">
+              Click any <span class="badge bg-success-subtle text-success border border-success-subtle">available</span> day to select a start date, then click an available end date. 
+              Unavailable days are <span class="text-decoration-line-through">crossed out</span>.
+            </small>
+          </div>
+
+          <form method="post" action="{% url 'book_car' car.id %}" id="bookForm">
+            {% csrf_token %}
+            <div class="d-none">
+              {{ form.start_date }}
+              {{ form.end_date }}
+            </div>
+
+            <div class="mb-3">
+              <div id="dateWarning" class="alert alert-warning py-2 px-3 d-none mb-2">
+                Selected dates are invalid. Please pick a valid available range.
+              </div>
+              <div class="p-2 rounded border bg-light d-flex justify-content-between">
+                <span>Estimated Total</span>
+                <strong id="pricePreview">—</strong>
+              </div>
+              <small class="text-muted">Final total is computed by the server.</small>
+            </div>
+
+            <button class="btn btn-primary w-100" type="submit" id="requestBtn" disabled>Request Ride</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: .25rem;
+  }
+  .cal-weekday { font-size: .8rem; color: #6c757d; text-align: center; padding-bottom: .25rem; }
+  .cal-day { text-align: center; padding: .5rem 0; border-radius: .5rem; cursor: pointer; user-select: none; }
+  .cal-day.muted { visibility: hidden; }
+  .cal-day.unavailable { text-decoration: line-through; color: #adb5bd !important; background: #f1f3f5; cursor: not-allowed; }
+  .cal-day.available { background: #f8f9fa; border: 1px solid #e9ecef; }
+  .cal-day.available:hover { outline: 2px solid rgba(13,110,253,.3); }
+  .cal-day.selected { background: #0d6efd; color: #fff; }
+  .cal-day.in-range { background: #cfe2ff; }
+  .legend { font-size: .85rem; }
+  @media (max-width: 576px){ .calendar { width: 100%; } }
+</style>
+
+<script>
+  // ======= Data from server =======
+  const blocked = [
+    {% for b in car.bookings.all %}
+      {% if b.status != 'cancelled' %}
+        { s: '{{ b.start_date|date:"Y-m-d" }}', e: '{{ b.end_date|date:"Y-m-d" }}' }{% if not forloop.last %},{% endif %}
+      {% endif %}
+    {% endfor %}
+  ];
+  const rate = {{ car.rent|default:0 }};
+
+  // ======= Helpers =======
+  const fmt = (d) => d.toISOString().slice(0,10);
+  const toDate = (s) => new Date(s + 'T00:00:00');
+  const addDays = (d,n)=>{ const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+  const sameDay = (a,b)=> a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  function rangesOverlap(aStart,aEnd,bStart,bEnd){ return aStart < bEnd && aEnd > bStart; }
+  function isBlocked(day){
+    for (const r of blocked){
+      const s = toDate(r.s), e = toDate(r.e);
+      if (rangesOverlap(day, addDays(day,1), s, e)) return true;
+    }
+    return false;
+  }
+
+  // ======= Selection model =======
+  let selStart = null, selEnd = null;
+
+  function resetSelection(){
+    selStart = selEnd = null;
+    document.querySelectorAll('.cal-day').forEach(el=>{
+      el.classList.remove('selected','in-range');
+    });
+    updateFormAndPrice();
+  }
+
+  function applySelectionVisual(){
+    document.querySelectorAll('.cal-day').forEach(el=>{
+      el.classList.remove('selected','in-range');
+      const dateStr = el.dataset.date;
+      if (!dateStr || el.classList.contains('unavailable')) return;
+      const d = toDate(dateStr);
+      if (selStart && sameDay(d, selStart)) el.classList.add('selected');
+      if (selEnd && sameDay(d, selEnd)) el.classList.add('selected');
+      if (selStart && selEnd && d > selStart && d < selEnd) el.classList.add('in-range');
+    });
+  }
+
+  function updateFormAndPrice(){
+    const startInput = document.querySelector('[name="start_date"]');
+    const endInput = document.querySelector('[name="end_date"]');
+    const out = document.getElementById('pricePreview');
+    const warn = document.getElementById('dateWarning');
+    const btn = document.getElementById('requestBtn');
+
+    if (selStart && selEnd && selEnd > selStart){
+      startInput.value = fmt(selStart);
+      endInput.value = fmt(selEnd);
+      const days = Math.round((selEnd - selStart) / (1000*60*60*24));
+      out.textContent = days > 0 ? (days * rate) + ' Tk' : '—';
+
+      let invalid = false;
+      for (let d = new Date(selStart); d < selEnd; d = addDays(d,1)){
+        if (isBlocked(d)){ invalid = true; break; }
+      }
+      if (invalid){ warn.classList.remove('d-none'); btn.disabled = true; }
+      else { warn.classList.add('d-none'); btn.disabled = false; }
+    } else {
+      startInput.value = ''; endInput.value = ''; out.textContent = '—'; btn.disabled = true; warn.classList.add('d-none');
+    }
+  }
+
+  function monthTitle(d){ return d.toLocaleString(undefined, { month: 'long', year: 'numeric' }); }
+  function buildMonth(containerId, titleId, baseDate){
+    const titleEl = document.getElementById(titleId);
+    const grid = document.getElementById(containerId);
+    titleEl.textContent = monthTitle(baseDate);
+    grid.innerHTML = '';
+    const weekdays = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+    weekdays.forEach(w=>{
+      const h = document.createElement('div');
+      h.className = 'cal-weekday';
+      h.textContent = w;
+      grid.appendChild(h);
+    });
+    const first = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
+    const last  = new Date(baseDate.getFullYear(), baseDate.getMonth()+1, 0);
+    const startOffset = first.getDay();
+
+    for (let i=0;i<startOffset;i++){
+      const m = document.createElement('div');
+      m.className = 'cal-day muted';
+      grid.appendChild(m);
+    }
+    for (let day=1; day<=last.getDate(); day++){
+      const d = new Date(baseDate.getFullYear(), baseDate.getMonth(), day);
+      const cell = document.createElement('div');
+      cell.className = 'cal-day';
+      cell.textContent = String(day);
+      if (isBlocked(d)){
+        cell.classList.add('unavailable');
+      } else {
+        cell.classList.add('available');
+        cell.tabIndex = 0;
+        cell.addEventListener('click', ()=>onPick(d));
+        cell.addEventListener('keydown', (e)=>{ if (e.key==='Enter' || e.key===' ') onPick(d); });
+      }
+      cell.dataset.date = fmt(d);
+      grid.appendChild(cell);
+    }
+  }
+
+  function onPick(d){
+    if (!selStart || (selStart && selEnd)){ selStart = d; selEnd = null; }
+    else if (selStart && !selEnd){
+      if (d <= selStart){ selStart = d; selEnd = null; }
+      else {
+        let invalid = false;
+        for (let x = new Date(selStart); x < d; x = addDays(x,1)){ if (isBlocked(x)){ invalid = true; break; } }
+        if (invalid){ selStart = d; selEnd = null; } else { selEnd = d; }
+      }
+    }
+    applySelectionVisual(); updateFormAndPrice();
+  }
+
+  (function init(){
+    const today = new Date(); today.setHours(0,0,0,0);
+    const firstMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const nextMonth  = new Date(today.getFullYear(), today.getMonth()+1, 1);
+    buildMonth('cal1-grid', 'cal1-title', firstMonth);
+    buildMonth('cal2-grid', 'cal2-title', nextMonth);
+  })();
+</script>
+{% endblock %}

@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django
+*.log
+local_settings.py
+/db.sqlite3
+/media/
+/staticfiles/
+
+# Environments
+.env
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Node / Tailwind cache
+node_modules/
+*.lock
+
+# Byte-compiled / cache
+*.egg-info/
+.eggs/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Coverage / tests
+htmlcov/
+.coverage*
+.pytest_cache/
+
+# Misc
+*.bak
+*.swp

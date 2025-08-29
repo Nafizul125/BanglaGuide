@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Live Comments</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; }
+    h2 { margin: 0 0 16px; }
+    #new-post { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    #post-text { flex: 1; min-width: 240px; padding: 10px; border: 1px solid #ddd; border-radius: 10px; }
+    button { padding: 10px 14px; border: 1px solid #ddd; border-radius: 10px; cursor: pointer; }
+    .post { border: 1px solid #eee; border-radius: 10px; padding: 10px; margin-bottom: 12px; }
+    .meta { font-size: 12px; color: #666; margin-bottom: 6px; }
+    .replies { margin-top: 8px; margin-left: 12px; }
+    .reply { border-left: 3px solid #eee; padding-left: 8px; margin: 6px 0; }
+    .reply-box { display: flex; gap: 6px; margin-top: 8px; }
+    .reply-input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 8px; }
+    .muted { color: #777; font-size: 14px; margin-left: 8px; }
+    a.btn { text-decoration: none; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h2>Share your travel experience (live)</h2>
+
+  <div id="new-post">
+    <input id="post-text" maxlength="500" placeholder="Write a comment..." {% if not is_authed %}disabled{% endif %} />
+    <button id="send-post" {% if not is_authed %}disabled{% endif %}>Post</button>
+    {% if not is_authed %}
+      <span class="muted">You must be logged in to post.</span>
+      <!-- If you don't actually have a 'login' url name, change it here -->
+      <a class="btn" href="{% url 'login' %}?next={% url 'chat' %}">Sign in</a>
+    {% endif %}
+  </div>
+
+  <div id="feed">
+    {% for p in posts %}
+      <div class="post" data-post-id="{{ p.id }}">
+        {% with uname=p.user.name|default_if_none:"" %}
+          {% if not uname %}
+            {% with uname=p.user.username|default_if_none:"" %}
+              {% if not uname %}
+                {% with uname="Guest" %}{% endwith %}
+              {% endif %}
+            {% endwith %}
+          {% endif %}
+        {% endwith %}
+        <div class="meta">
+          {{ uname|default:"Guest" }} • {{ p.timestamp }}
+        </div>
+        <div class="text">{{ p.text }}</div>
+
+        <div class="replies">
+          {% for r in p.replies.all %}
+            {% with runame=r.user.name|default_if_none:"" %}
+              {% if not runame %}
+                {% with runame=r.user.username|default_if_none:"" %}
+                  {% if not runame %}
+                    {% with runame="Guest" %}{% endwith %}
+                  {% endif %}
+                {% endwith %}
+              {% endif %}
+            {% endwith %}
+            <div class="reply">
+              <div class="meta">{{ runame|default:"Guest" }} • {{ r.timestamp }}</div>
+              <div class="text">{{ r.text }}</div>
+            </div>
+          {% endfor %}
+        </div>
+
+        <div class="reply-box">
+          <input class="reply-input" maxlength="500" placeholder="Reply..." {% if not is_authed %}disabled{% endif %} />
+          <button class="reply-send" {% if not is_authed %}disabled{% endif %}>Reply</button>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    // Auth flag as a real JS boolean
+  const isAuthed = "{{ is_authed|yesno:'true,false' }}" === "true";
+
+    // WebSocket
+    const wsScheme = location.protocol === "https:" ? "wss" : "ws";
+    const socket = new WebSocket(`${wsScheme}://${location.host}/ws/comments/`);
+
+    const feed = document.getElementById("feed");
+    const postInput = document.getElementById("post-text");
+    const postBtn = document.getElementById("send-post");
+
+    function postHtml(id, user, text, ts) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "post";
+      wrapper.dataset.postId = id;
+      wrapper.innerHTML = `
+        <div class="meta"></div>
+        <div class="text"></div>
+        <div class="replies"></div>
+        <div class="reply-box">
+          <input class="reply-input" maxlength="500" placeholder="Reply..." ${isAuthed ? "" : "disabled"} />
+          <button class="reply-send" ${isAuthed ? "" : "disabled"}>Reply</button>
+        </div>
+      `;
+      wrapper.querySelector(".meta").textContent = `${user} • ${ts}`;
+      wrapper.querySelector(".text").textContent = text;
+      return wrapper;
+    }
+
+    function replyHtml(user, text, ts) {
+      const div = document.createElement("div");
+      div.className = "reply";
+      div.innerHTML = `<div class="meta"></div><div class="text"></div>`;
+      div.querySelector(".meta").textContent = `${user} • ${ts}`;
+      div.querySelector(".text").textContent = text;
+      return div;
+    }
+
+    socket.addEventListener("message", (e) => {
+      let data = {};
+      try { data = JSON.parse(e.data || "{}"); } catch {}
+      if (!data.type) return;
+
+      if (data.type === "history") {
+        // We already rendered history server-side. You could merge here if you want.
+        return;
+      }
+
+      if (data.type === "new_post") {
+        const node = postHtml(data.id, data.user, data.text, data.ts);
+        feed.prepend(node);
+      } else if (data.type === "new_reply") {
+        const post = feed.querySelector(`.post[data-post-id="${data.post_id}"]`);
+        if (post) {
+          post.querySelector(".replies").appendChild(replyHtml(data.user, data.text, data.ts));
+        }
+      } else if (data.type === "error" && data.code === "auth_required") {
+        alert("Please sign in to post.");
+      }
+    });
+
+    function sendPost() {
+      if (!isAuthed) { alert("Please sign in to post."); return; }
+      const text = (postInput?.value || "").trim();
+      if (!text) return;
+      socket.send(JSON.stringify({ action: "post", text }));
+      postInput.value = "";
+      postInput.focus();
+    }
+
+    postBtn && postBtn.addEventListener("click", sendPost);
+    postInput && postInput.addEventListener("keydown", (e) => { if (e.key === "Enter") sendPost(); });
+
+    // Delegate reply send buttons
+    feed.addEventListener("click", (e) => {
+      if (!e.target.classList.contains("reply-send")) return;
+      if (!isAuthed) { alert("Please sign in to reply."); return; }
+      const post = e.target.closest(".post");
+      const input = post.querySelector(".reply-input");
+      const text = (input?.value || "").trim();
+      if (!text) return;
+      socket.send(JSON.stringify({ action: "reply", post_id: post.dataset.postId, text }));
+      input.value = "";
+      input.focus();
+    });
+
+    // Enter to send reply
+    feed.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      const input = e.target;
+      if (!input.classList.contains("reply-input")) return;
+      if (!isAuthed) { alert("Please sign in to reply."); return; }
+      const post = input.closest(".post");
+      const text = (input?.value || "").trim();
+      if (!text) return;
+      socket.send(JSON.stringify({ action: "reply", post_id: post.dataset.postId, text }));
+      input.value = "";
+    });
+  </script>
+</body>
+</html>

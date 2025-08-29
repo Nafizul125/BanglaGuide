@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}BanglaGuide{% endblock %}</title>
+    {% load static %}  <!-- Add this line to load the static template tag library -->
+    <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}">  <!-- Tailwind compiled CSS -->
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a class="text-xl font-bold text-primary hover:text-blue-700" href="{% url 'homepage' %}">BanglaGuide</a>
+            <div class="space-x-4">
+                {% if user.is_authenticated %}
+                    <span class="text-gray-600">Welcome, {{ user.name }}</span>
+                    <a href="{% url 'logout' %}" class="text-blue-600 hover:text-blue-800">Logout</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="text-blue-600 hover:text-blue-800">Login</a>
+                    <a href="{% url 'register' %}" class="text-blue-600 hover:text-blue-800">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    <main class="max-w-7xl mx-auto px-4 py-6">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
