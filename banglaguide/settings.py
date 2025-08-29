@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,21 +22,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-your-secret-key-here'  # Change this to a secure random key later
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-your-secret-key-here')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-# Comma separated hostnames in ALLOWED_HOSTS env var, e.g. "example.com,.example.com"
-_hosts_env = os.environ.get("ALLOWED_HOSTS", "")
-ALLOWED_HOSTS = [h.strip() for h in _hosts_env.split(",") if h.strip()] or []
+ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()] or []
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    # WhiteNoise optional app helper (keeps runserver from serving static itself when using WhiteNoise)
-    'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -55,8 +52,6 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    # WhiteNoise for serving static files in production
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -89,16 +84,21 @@ WSGI_APPLICATION = 'banglaguide.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'BanglaGuide',  # Your database name
-        'USER': 'postgres',     # Your PostgreSQL user
-        'PASSWORD': '12345',    # Your password (change to secure one in production)
-        'HOST': 'localhost',
-        'PORT': '5432',
+if 'DATABASE_URL' in os.environ:
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ['DATABASE_URL'], conn_max_age=600)
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'BanglaGuide'),
+            'USER': os.environ.get('DB_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', '12345'),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
+    }
 
 
 # Password validation
@@ -132,26 +132,10 @@ USE_I18N = True
 USE_TZ = True
 
 
-"""Static files (CSS, JavaScript, Images) configuration.
-In production (e.g. Render) Django's collectstatic will gather all app static
-assets into STATIC_ROOT. WhiteNoise then serves them.
-"""
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = '/static/'
-
-# Directory where collectstatic puts compiled assets
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-
-# Additional directories Django will search for static files (besides each app's static/)
-STATICFILES_DIRS = [
-    # Tailwind build output (adjust if your compiled CSS output differs)
-    # The django-tailwind default places built assets inside the theme app's static directory.
-    # If you later configure a distinct build dir, add it here.
-]
-
-# Use compressed + hashed file names for better caching in production
-if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+STATIC_URL = 'static/'
 
 # Media files for uploads
 MEDIA_URL = '/media/'
@@ -170,16 +154,11 @@ LOGIN_REDIRECT_URL = 'homepage'  # After login, redirect to homepage
 LOGIN_URL = 'login'  # If not logged in, redirect to login page
 
 # Weather API Key (sign up at openweathermap.org)
-WEATHER_API_KEY = 'your_openweathermap_api_key_here'
+WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY', '')
 
 # Tailwind Configuration
 TAILWIND_APP_NAME = 'theme'  # Tailwind theme app (add 'theme' later)
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
-NPM_BIN_PATH = 'C:/Program Files/nodejs/npm.cmd'  # Adjust for your OS (use 'which npm' on macOS/Linux)
-
-# Allow override of database credentials / secret key via environment in production
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', SECRET_KEY)
-
-# If deploying without Postgres locally, you can provide a DATABASE_URL env var and parse it here later.
+NPM_BIN_PATH = os.environ.get('NPM_BIN_PATH', 'C:/Program Files/nodejs/npm.cmd')  # Adjust for your OS
