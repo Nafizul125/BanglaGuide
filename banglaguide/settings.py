@@ -14,6 +14,30 @@ from pathlib import Path
 import os
 import dj_database_url
 
+# Load variables from a local .env file (simple parser) before reading them.
+# This avoids adding an extra dependency like python-dotenv or django-environ.
+# It only sets variables that are not already present in the real environment.
+def _load_dotenv(path: Path):
+    try:
+        with open(path, 'r', encoding='utf-8') as fh:
+            for raw_line in fh:
+                line = raw_line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                key = key.strip()
+                value = value.strip().strip('"').strip("'")
+                # Don't overwrite existing environment variables
+                if key and key not in os.environ:
+                    os.environ[key] = value
+    except FileNotFoundError:
+        pass
+
+# Attempt to load .env in project root (development convenience)
+_load_dotenv(Path(__file__).resolve().parent.parent / '.env')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
