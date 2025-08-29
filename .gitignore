@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+
+# Virtual environments
+venv/
+.venv/
+.venv2/
+env/
+Env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+
+# Django
+staticfiles/
+media/
+db.sqlite3
+
+# Node / Tailwind artifacts
+node_modules/
+theme/static_src/node_modules/
+
+# Logs
+*.log
+
+# OS
+Thumbs.db
+ehthumbs.db
+*.DS_Store
