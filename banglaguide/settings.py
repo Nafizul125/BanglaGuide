@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,14 +24,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-your-secret-key-here'  # Change this to a secure random key later
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
-ALLOWED_HOSTS = []
+# Comma separated hostnames in ALLOWED_HOSTS env var, e.g. "example.com,.example.com"
+_hosts_env = os.environ.get("ALLOWED_HOSTS", "")
+ALLOWED_HOSTS = [h.strip() for h in _hosts_env.split(",") if h.strip()] or []
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    # WhiteNoise optional app helper (keeps runserver from serving static itself when using WhiteNoise)
+    'whitenoise.runserver_nostatic',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -50,6 +55,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise for serving static files in production
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -125,10 +132,26 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.0/howto/static-files/
+"""Static files (CSS, JavaScript, Images) configuration.
+In production (e.g. Render) Django's collectstatic will gather all app static
+assets into STATIC_ROOT. WhiteNoise then serves them.
+"""
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+
+# Directory where collectstatic puts compiled assets
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Additional directories Django will search for static files (besides each app's static/)
+STATICFILES_DIRS = [
+    # Tailwind build output (adjust if your compiled CSS output differs)
+    # The django-tailwind default places built assets inside the theme app's static directory.
+    # If you later configure a distinct build dir, add it here.
+]
+
+# Use compressed + hashed file names for better caching in production
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files for uploads
 MEDIA_URL = '/media/'
@@ -155,3 +178,8 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 NPM_BIN_PATH = 'C:/Program Files/nodejs/npm.cmd'  # Adjust for your OS (use 'which npm' on macOS/Linux)
+
+# Allow override of database credentials / secret key via environment in production
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', SECRET_KEY)
+
+# If deploying without Postgres locally, you can provide a DATABASE_URL env var and parse it here later.
