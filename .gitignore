@@ -1,4 +1,3 @@
-# Python
 __pycache__/
 *.py[cod]
 *.pyo
@@ -11,26 +10,26 @@ venv/
 .venv/
 .venv2/
 env/
-Env/
 ENV/
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Static build output
+staticfiles/
+node_modules/
+theme/static_src/node_modules/
 
 # IDE
 .vscode/
 .idea/
 
-# Django
-staticfiles/
-media/
-db.sqlite3
-
-# Node / Tailwind artifacts
-node_modules/
-theme/static_src/node_modules/
+# OS junk
+*.DS_Store
+Thumbs.db
+ehthumbs.db
 
 # Logs
 *.log
-
-# OS
-Thumbs.db
-ehthumbs.db
-*.DS_Store
