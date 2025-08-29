@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'chat',      # Chat app
     'tailwind',
     'theme',  # Add this for Tailwind
+    'channels',  # WebSocket support
 ]
 
 MIDDLEWARE = [
@@ -105,6 +106,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'banglaguide.wsgi.application'
+ASGI_APPLICATION = 'banglaguide.asgi.application'
+
+# Channels (Redis) configuration
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer' if os.environ.get('REDIS_URL') in (None, '') else 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379/0')]
+        } if os.environ.get('REDIS_URL') else {},
+    }
+}
 
 
 # Database
