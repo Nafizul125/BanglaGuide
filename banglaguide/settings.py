@@ -111,9 +111,17 @@ WSGI_APPLICATION = 'banglaguide.wsgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 if 'DATABASE_URL' in os.environ:
+    # Use DATABASE_URL when provided (e.g., Render). Enforce SSL for hosted Postgres.
     DATABASES = {
-        'default': dj_database_url.parse(os.environ['DATABASE_URL'], conn_max_age=600)
+        'default': dj_database_url.parse(
+            os.environ['DATABASE_URL'],
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
+    if DEBUG:
+        # Lightweight visibility during local dev to confirm remote host in use.
+        print("[settings] Using external DATABASE_URL host:", DATABASES['default'].get('HOST'))
 else:
     DATABASES = {
         'default': {
